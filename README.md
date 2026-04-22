@@ -1,5 +1,7 @@
 # SierraNode_Docs
- SierraNode: Absolute is a security-hardened build for a secure, offline-capable, end-to-end encrypted peer-to-peer messenger with optional onion helper primitives. A packaged demo binary is available for evaluation.
+  SierraNode is a hardened, offline-capable P2P messenger with end-to-end encryption, replay-resistant sessions, strict relay/route controls, optional .gapf file encryption (AES-256-GCM + scrypt), and built-in
+  security regression checks.
+
 ## Security hardening highlights
 
 - Ephemeral ECDH handshake authenticated by long-term identity signatures.
