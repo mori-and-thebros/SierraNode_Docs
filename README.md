@@ -1,6 +1,5 @@
-# SierraNode_Docs
-  SierraNode is a hardened, offline-capable P2P messenger with end-to-end encryption, replay-resistant sessions, strict relay/route controls, optional .gapf file encryption (AES-256-GCM + scrypt), and built-in
-  security regression checks.
+# SierraNode: Absolute
+SierraNode: Absolute is a security-hardened build for a secure, offline-capable, end-to-end encrypted peer-to-peer messenger with optional onion helper primitives. A packaged demo binary is available for evaluation.
 
 ## Security hardening highlights
 
@@ -29,6 +28,29 @@
 - `--enterprise-strict` now enforces stronger file-encryption password length (>= 12 bytes).
 - Explicit exception taxonomy for protocol/auth/replay/network/session/tunnel failures.
 - Explicit lifecycle state machines for session, listener, and relay runtime.
+
+## Project structure
+
+Top-level layout (major folders/files):
+
+```text
+The_App_Named_Absolute_Hardened/
+  app/                  # Runtime modules (CLI, session, crypto, file transfer, relay)
+  sierranode/           # Packaged license/runtime constants
+  tests/                # Unit + adversarial + regression-support tests
+  scripts/              # CI smoke, fuzz, soak, docs/pdf, and safety checks
+  docs/                 # Protocol, operations, readiness, and sales-facing docs
+  artifacts/            # Generated demo/audit/test outputs
+  security_regression.py
+  generate_license.py
+  README.md
+  testing_for_newbies_linux.txt
+  testing_for_newbies_windows.txt
+  testing_for_newbies_mixed_OS.txt
+  testin_on_windows_ONLY_one_device.txt
+```
+
+For module-level ownership and flow, see `docs/CODEBASE_GUIDE.md`.
 
 ## Quick start
 
@@ -99,6 +121,9 @@ python3 -m app.cli connect \
   --file-max-bytes 16777216 \
   <peer_ip> <peer_port>
 ```
+
+`--file-chunk-bytes` now has strict overhead-aware validation (chunk base64 + control-frame JSON + protocol prefix),
+so values that would overflow a session frame are rejected before transfer starts.
 
 Pin inbound sessions to one trusted contact:
 
@@ -211,6 +236,28 @@ Optional KDF tuning is available:
 python3 -m app.cli file-encrypt ./document.pdf --scrypt-n 32768 --scrypt-r 8 --scrypt-p 1
 ```
 
+If Argon2id runtime support is installed, you can opt in:
+
+```bash
+python3 -m app.cli file-encrypt ./document.pdf \
+  --kdf argon2id \
+  --argon2-time-cost 3 \
+  --argon2-memory-kib 65536 \
+  --argon2-parallelism 1
+```
+
+Quick runtime probe for Argon2id support in the current interpreter:
+
+```bash
+python3 - <<'PY'
+from app.file_encryptor import file_argon2id_available
+print(file_argon2id_available())
+PY
+```
+
+If this prints `False`, install Argon2 support in the same Python runtime you use to run SierraNode.
+On mixed Windows/WSL setups, `pip install` in Windows Python does not install into WSL Python automatically.
+
 You can enforce a local size limit when encrypting/decrypting:
 
 ```bash
@@ -220,11 +267,12 @@ python3 -m app.cli file-decrypt ./document.pdf.gapf --max-file-bytes 67108864
 
 Current format hardening details:
 - `.gapf` files use `AES-256-GCM`.
-- Key derivation uses `scrypt` (hardened minimum `n=16384`), which is a memory-hard password KDF.
-- Argon2id is planned when a vetted runtime dependency is available across target builds.
+- Key derivation supports `scrypt` (default, hardened minimum `n=16384`) and optional `argon2id` when runtime support is available.
+- If `--kdf argon2id` is selected on a runtime without Argon2id support, encryption fails safely with a clear error.
 - File format is explicitly versioned (current writer emits `v=3`; older v1/v2 files remain decryptable).
 - File header stores both `salt_b64` and `nonce_b64`; ciphertext body is stored separately.
 - Critical metadata (KDF params, salt, nonce, filename, size, hash) is AEAD-bound as authenticated data.
+- Decryption applies envelope-size and base64-length guards before expensive decode/derive steps.
 - Decryption verifies AEAD authenticity and plaintext SHA-256 integrity before writing output.
 - Legacy v1 `.gapf` files remain decryptable for backward compatibility.
 
@@ -341,6 +389,26 @@ python3 scripts/fuzz_campaign.py --iterations 1500
 python3 -m unittest discover -s tests -p "test_*.py"
 ```
 
+Step-by-step manual network test guides:
+- Linux hosts: `testing_for_newbies_linux.txt`
+- Windows hosts: `testing_for_newbies_windows.txt`
+- Mixed Linux/Windows hosts: `testing_for_newbies_mixed_OS.txt`
+- Single Windows machine local lab: `testin_on_windows_ONLY_one_device.txt`
+
+Pre-release reliability gate (recommended):
+
+```bash
+python3 -m compileall -q app sierranode scripts tests security_regression.py generate_license.py
+python3 -m unittest discover -s tests -p "test_*.py"
+python3 security_regression.py --strict
+python3 scripts/public_repo_safety_check.py
+python3 scripts/chaos_soak.py --duration-sec 12 --nodes 3 --clients 8 \
+  --server-drop-rate 0 --server-close-rate 0 --server-corrupt-rate 0 \
+  --min-roundtrips 500
+```
+
+Treat any non-zero exit as a release blocker.
+
 Optional long-run transport resilience soak:
 
 ```bash
@@ -348,6 +416,20 @@ python3 scripts/chaos_soak.py --duration-sec 300 --nodes 5 --clients 24 --min-ro
 ```
 
 This harness is loopback-only (`127.0.0.1`) and is intended for local transport stress checks, not distributed production chaos testing.
+
+Recommended soak profiles:
+
+```bash
+# Clean profile (no injected corruption/drops): roundtrip_mismatch should stay 0
+python3 scripts/chaos_soak.py --duration-sec 60 --nodes 5 --clients 12 \
+  --server-drop-rate 0 --server-close-rate 0 --server-corrupt-rate 0 \
+  --min-roundtrips 1500
+
+# Chaos profile (fault injection): roundtrip_mismatch may be non-zero, but process should stay stable
+python3 scripts/chaos_soak.py --duration-sec 60 --nodes 5 --clients 12 \
+  --server-drop-rate 0.02 --server-close-rate 0.02 --server-corrupt-rate 0.02 \
+  --min-roundtrips 800
+```
 
 Generate baseline working VLESS/VMess configs and links (Xray format):
 
@@ -474,6 +556,8 @@ Current checks include (130+ checks/assertions grouped into these areas):
 - VLESS/VMess config automation guide: `docs/V2RAY_CONFIG_AUTOMATION.md`
 - Buyer brief: `docs/BUYER_BRIEF.md`
 - Technical proof pack: `docs/TECHNICAL_PROOF_PACK.md`
+- Technical positioning brief: `docs/TECHNICAL_POSITIONING.md`
+- Production readiness review: `docs/PRODUCTION_READINESS_REVIEW.md`
 - Plain-English license summary: `docs/LICENSE_SUMMARY_PLAIN_ENGLISH.md`
 - Demo quickstart: `docs/DEMO_QUICKSTART.md`
 - FAQ sheet: `docs/FAQ_SHEET.md`
