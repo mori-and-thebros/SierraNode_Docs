@@ -1,5 +1,7 @@
-# SierraNode: Absolute
+# SierraNode: Absolute - Hardened Build
+
 SierraNode: Absolute is a security-hardened build for a secure, offline-capable, end-to-end encrypted peer-to-peer messenger with optional onion helper primitives. A packaged demo binary is available for evaluation.
+
 
 ## Security hardening highlights
 
@@ -51,6 +53,17 @@ The_App_Named_Absolute_Hardened/
 ```
 
 For module-level ownership and flow, see `docs/CODEBASE_GUIDE.md`.
+For a consolidated capability inventory (CLI, daemon API, hardening, validation), see `FEATURE_MATRIX.md`.
+
+## Website publishing
+
+The static sales site lives in `website/`.
+
+- Publish directory: `website`
+- Build command: none
+- Local preview: `cd website && python3 -m http.server 8080`
+- Publish guide: `website/README.md`
+- Optional publish zip: `python3 scripts/build_website_publish_bundle.py`
 
 ## Quick start
 
@@ -130,6 +143,26 @@ Pin inbound sessions to one trusted contact:
 ```bash
 python3 -m app.cli listen --peer-alias <alias> 0.0.0.0 9000
 ```
+
+## Desktop GUI bridge
+
+Run the local authenticated backend daemon for desktop frontends:
+
+```bash
+python3 -m app.cli gui-daemon --expert-mode --groups groups.json
+```
+
+The daemon writes auth bootstrap metadata to `~/.sierranode/gui_daemon_auth.json`
+(API base URL + bearer token). It now also exposes realtime session endpoints and signed group-state endpoints for desktop clients.
+A prototype desktop UI is available in `desktop/prototype/`.
+
+Desktop group-invite UX is now backed by a dedicated daemon endpoint:
+
+- `POST /v1/groups/join-by-invite` validates invite-code schema/fingerprint and executes authenticated host invite flow.
+
+Desktop API/security model details:
+
+- `docs/DESKTOP_GUI_GROUP_CHAT_ARCHITECTURE.md`
 
 ## One-command local demo
 
@@ -593,6 +626,56 @@ python3 scripts/public_repo_safety_check.py
 ```
 
 Never publish live keystores/contacts/identity material or relay keys in a public repo.
+
+## Hardened Windows release workflow
+
+For full end-to-end release gating (including reproducibility checks), use:
+
+- `docs/WINDOWS_RELEASE_CHECKLIST.md`
+- `docs/PRODUCTION_READINESS_REVIEW.md`
+
+Build a hardened Windows one-file executable (Nuitka-based):
+
+```powershell
+.\scripts\build_hardened_windows.ps1 -OutputName SierraNode_Absolute_Hardened.exe
+```
+
+Generate integrity signing keys once (keep the private key offline):
+
+```bash
+python3 scripts/release_integrity.py gen-keypair \
+  --private-out ./release_keys/integrity_private.pem \
+  --public-out ./release_keys/integrity_public.pem
+```
+
+Create and verify a signed integrity manifest for a release artifact:
+
+```bash
+python3 scripts/release_integrity.py create \
+  --artifact ./BINARY/SierraNode_Absolute_Hardened.exe \
+  --manifest-out ./BINARY/SierraNode_Absolute_Hardened.exe.integrity.json \
+  --private-key ./release_keys/integrity_private.pem
+
+python3 scripts/release_integrity.py verify \
+  --artifact ./BINARY/SierraNode_Absolute_Hardened.exe \
+  --manifest ./BINARY/SierraNode_Absolute_Hardened.exe.integrity.json \
+  --public-key ./release_keys/integrity_public.pem
+```
+
+Windows code-sign + manifest generation helper:
+
+```powershell
+.\scripts\release_sign_windows.ps1 `
+  -ArtifactPath .\BINARY\SierraNode_Absolute_Hardened.exe `
+  -PfxPath .\release_keys\signing_cert.pfx `
+  -IntegrityPrivateKeyPath .\release_keys\integrity_private.pem `
+  -IntegrityPublicKeyPath .\release_keys\integrity_public.pem
+```
+
+Runtime verification flags:
+- `--anti-tamper-strict` blocks startup if debugger/tamper indicators are detected.
+- `--require-integrity` requires signed manifest verification at startup.
+- `--integrity-manifest` and `--integrity-public-key` provide verification inputs.
 
 ## Production security checklist
 
