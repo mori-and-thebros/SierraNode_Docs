@@ -1,6 +1,11 @@
-# SierraNode Demo (Buyer-Friendly Path)
+# SierraNode Written Evaluation Quickstart
 
-This demo is designed for technical evaluators and procurement conversations.
+This quickstart supports self-directed technical evaluation and written procurement review.
+
+Important:
+- The website offer does not depend on guided live demos or call-based walkthroughs.
+- This file exists to help technically literate buyers validate the packaged workflow independently.
+- Treat this as optional proof-of-operation support inside a broader written evaluation process.
 
 ## Fast path (recommended)
 
@@ -20,7 +25,7 @@ What it does:
 
 Typical time to ready state: under 3 minutes on a standard laptop.
 
-## Run the actual demo session
+## Run the local evaluation session
 
 1) Start listener (Terminal A) using printed command.
 2) Start connector (Terminal B) using printed command.
@@ -67,7 +72,7 @@ Demo bootstrap uses a temporary environment variable internally for non-interact
 
 Do not use environment-variable password patterns as a production credential strategy.
 
-## Optional post-demo proof commands
+## Optional post-evaluation proof commands
 
 ```bash
 python3 scripts/ci_smoke.py

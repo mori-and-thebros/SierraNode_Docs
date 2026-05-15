@@ -4,6 +4,8 @@
 
 SierraNode: Absolute is a proprietary, self-hosted secure messaging platform with optional relay routing, designed for teams that want direct infrastructure ownership and security-oriented controls.
 
+It is sold as a licensable software product for technically literate buyers, not as a consumer messaging app or managed hosted service.
+
 ## Who is it for?
 
 Best fit buyers:
@@ -44,16 +46,31 @@ SierraNode is designed to be independently assessable, with audit-readiness mate
 
 ## What support is included?
 
-The default offer is self-hosted and self-managed. Optional deployment review, technical clarification, or commercial support terms may be agreed separately for qualifying buyers.
+The default offer is self-hosted and self-managed.
+Standard website-issued licensing is documentation-led and written-process-driven.
+Evaluator support is intentionally limited to fit assessment and technical review acceleration.
+Operator support is stronger within the standard written scope because that tier is intended for real internal deployment.
+Any broader commercial support expectations, if available, must be handled through separate written agreement.
 
 ## What payment methods are accepted?
 
-Primary: crypto settlement with verifiable transfer.
-Optional: wire/ACH or escrow by written agreement before delivery.
+Current website-issued standard path:
+- BTC settlement accepted.
+- ETH settlement accepted.
+- USD reference pricing converted at the written payment instruction stage.
+
+Card payments, bank payments, wire/ACH, and KYC document collection are not part of the standard website-issued purchase path.
+Serious buyers should confirm the selected tier and current payable amount in writing before funds move.
+
+## How should buyers think about Evaluator vs Operator?
+
+- Evaluator is for serious review when source inspection, fit validation, and internal technical scrutiny still need to happen before broader deployment rights make sense.
+- Operator is for buyers who already know they want private internal deployment rights and the strongest standard handoff package.
+- Qualified Evaluator fees may be credited toward a qualifying Operator upgrade when approved in writing, which helps keep the review path commercially progressive rather than dead-end.
 
 ## Is there a refund policy?
 
-Default policy is no refunds after source delivery/escrow completion.
+Default posture for standard website-issued licensing is that payments are treated as final once private delivery handling begins, unless a separate written exception is explicitly agreed beforehand.
 
 ## What limitations and responsibilities should buyers understand?
 
@@ -65,6 +82,6 @@ Default policy is no refunds after source delivery/escrow completion.
 
 1. Read `docs/BUYER_BRIEF.md`.
 2. Read this FAQ.
-3. Run `python3 scripts/demo_setup.py --local --clean` and follow `docs/DEMO_QUICKSTART.md`.
-4. Review `docs/TECHNICAL_PROOF_PACK.md`.
-5. If aligned, request commercial terms and license availability.
+3. Review `docs/TECHNICAL_PROOF_PACK.md`.
+4. Review `docs/PRODUCTION_READINESS_REVIEW.md` and `docs/ENTERPRISE_OPERATIONS.md`.
+5. If aligned, move into the written buyer-pack, inquiry, or standard payment flow.
